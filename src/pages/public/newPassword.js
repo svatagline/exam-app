@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { ManageError, ToastMessage } from '../../utills/common';
+import { useLocation, useNavigate } from 'react-router-dom';  
+import { isBlankSpace, ManageError, ToastMessage } from '../../utills/common';
 import { publicpostApi } from '../../utills/api';
-import { USER_API } from '../../utills/constant';
-import ButtonSpinner from '../../components/common/Spinner';
+import { USER_API } from '../../utills/constant'; 
 import Button from '../../components/common/Button';
 import InputBox from '../../components/common/InputBox';
 import AuthFormContainer from '../../components/common/AuthFormContainer';
+import useForm from '../../utills/hooks/formValidationHook';
 
 const NewPasswordPage = ({ handleToggle }) => {
     const navigateTo = useNavigate();
@@ -26,8 +24,7 @@ const NewPasswordPage = ({ handleToggle }) => {
         })
     }
     const renewPassword = async (data) => {
-        setLoader(true)
-
+        setLoader(true) 
         try {
             const response = await publicpostApi(USER_API.RENEW_PWD + token, data)
             setLoader(false)
@@ -44,33 +41,43 @@ const NewPasswordPage = ({ handleToggle }) => {
         }
 
     }
-    const formik = useFormik({
-        initialValues: {
-            password: '',
-            c_password: '',
-        },
-        validationSchema: Yup.object({
-            password:
-                Yup.string()
-                    .required('Password is required.')
-                    .min(6, 'Password is too short - should be 6 chars minimum.')
-                    .matches(/[a-zA-Z0-9]{6,30}/, 'Password can only contain letters and numbers'),
-            c_password: Yup
-                .string()
-                .required('Confirm password is required.')
-                .oneOf([Yup.ref('password')], 'Passwords must match')
+  
+    const onNewPassword = (values) => {
+        const body = {
+            Password: values.password,
+            ConfirmPassword: values.c_password
+        }
+        renewPassword(body)
+    }
+    const initialValues = {
+        password: '',
+        c_password: '',
+    }
+    const validate = (formValues) => {
+        const errors = {};
 
-        }),
-        onSubmit: values => {
-            // dispatch(Login(values, Navigate));
-            const body = {
-                Password: values.password,
-                ConfirmPassword: values.c_password
-            }
-            renewPassword(body)
-        },
-    });
+        if (!formValues.password) {
+            errors.password = "Password is required.";
+        } else if (!isBlankSpace(formValues.password)) {
+            errors.password = "Password cannot be blank or contain only spaces.";
+        } else if (`${formValues.password}`.length < 6) {
+            errors.password = "Password must be at least 6 characters.";
+        } else if (!/[a-zA-Z0-9]{6,30}/.test(formValues.password)) {
+            errors.password = "Password can contain first 6 letters and numbers.";
+        }
 
+        if (!formValues.c_password) {
+            errors.c_password = "Confirm password is required.";
+        } else if (formValues.c_password !== values.password) {
+            errors.c_password = "Confirm password should be match with new password.";
+        }
+        return errors;
+    };
+
+    const { values, errors, handleChange, handleBlur, handleSubmit } = useForm(
+        initialValues,
+        validate
+    );
     useEffect(() => {
         if (getParams && getParams?.search) {
             const allParams = getParams.search.split("?")
@@ -86,22 +93,22 @@ const NewPasswordPage = ({ handleToggle }) => {
         <>
             <AuthFormContainer
                 title='Set New Password'>
-                <form onSubmit={formik.handleSubmit}>
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(() => onNewPassword(values)) }}>
                     {[
-                        { title: 'Password', field: 'password', type: 'password' },
-                        { title: 'Confirm Password', field: 'c_password', type: 'password' },
+                        { title: 'Password', field: 'password',  type: pwdShow['password'] ? 'text' : 'password', },
+                        { title: 'Confirm Password', field: 'c_password',  type: pwdShow['c_password'] ? 'text' : 'password', },
                     ].map(({ title, field, type }, index) => {
                         return (
                             <InputBox
                                 key={index}
                                 type={type}
                                 title={title}
-                                value={formik.values[field]}
+                                value={values[field]}
                                 placeholder={`Enter ${`${title}`.toLowerCase()}`}
                                 name={field}
-                                handleChange={formik.handleChange}
-                                handleBlur={formik.handleBlur}
-                                error={{ show: formik.touched[field] && formik.errors[field], msg: formik.errors[field] }}
+                                handleChange={handleChange}
+                                handleBlur={handleBlur}
+                                error={{ show: errors[field], msg: errors[field] }}
                                 parentClass='auth-input-box'
                                 labelClass='sr-only'
                                 errorClass='form-error-text'

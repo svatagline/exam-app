@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { ToastMessage } from '../../utills/common';
+import React, { useState } from 'react'; 
+import { isBlankSpace, ToastMessage } from '../../utills/common';
 import { postApi } from '../../utills/api';
 import { USER_API } from '../../utills/constant';
 import Button from '../../components/common/Button';
 import InputBox from '../../components/common/InputBox';
 import AuthFormContainer from '../../components/common/AuthFormContainer';
+import useForm from '../../utills/hooks/formValidationHook';
 
 const ForgotPasswordPage = ({ handleToggle, email }) => {
     const [loader, setLoader] = useState(false)
@@ -21,29 +20,33 @@ const ForgotPasswordPage = ({ handleToggle, email }) => {
         } else {
             ToastMessage(response.message)
         }
+    }  
+
+    const initialValues = {
+        email: email
     }
-    const formik = useFormik({
-        initialValues: {
-            email: email
-        },
-        validationSchema: Yup.object({
+    const validate = (formValues) => {
+        const errors = {}; 
+        if (!formValues.email) {
+            errors.email = "Email is required.";
+        } else if (!isBlankSpace(formValues.email)) {
+            errors.email = "Email cannot be blank or contain only spaces.";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
+            errors.email = "Invalid email address.";
+        }
+        return errors;
+    };
 
-            email: Yup.string()
-                .email('Invalid email address')
-                .required('Email is required'),
-        }),
-        onSubmit: values => {
-            // dispatch(Login(values, Navigate));
-            userLogin(values)
-
-        },
-    });
+    const { values, errors, handleChange, handleBlur, handleSubmit } = useForm(
+        initialValues,
+        validate
+    );
     return (
         <>
             <AuthFormContainer
                 title='Forgot Password'>
 
-                <form onSubmit={formik.handleSubmit}>
+                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(() => userLogin(values)) }}>
                     {[
                         { title: 'Email', field: 'email', type: 'email' },
                     ].map(({ title, field, type }, index) => {
@@ -52,20 +55,18 @@ const ForgotPasswordPage = ({ handleToggle, email }) => {
                                 key={index}
                                 type={type}
                                 title={title}
-                                value={formik.values[field]}
+                                value={values[field]}
                                 placeholder={`Enter ${`${title}`.toLowerCase()}`}
                                 name={field}
-                                handleChange={formik.handleChange}
-                                handleBlur={formik.handleBlur}
-                                error={{ show: formik.touched[field] && formik.errors[field], msg: formik.errors[field] }}
+                                handleChange={handleChange}
+                                handleBlur={handleBlur}
+                                error={{ show: errors[field], msg: errors[field] }}
                                 parentClass='auth-input-box'
                                 errorClass='form-error-text'
                                 labelClass='sr-only'
                             />
                         );
-                    })}
-
-
+                    })} 
 
                     <Button
                         varient={'block'}

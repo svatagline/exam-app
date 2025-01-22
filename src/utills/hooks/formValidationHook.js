@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { trim } from "../common";
+import { useState } from "react"; 
 
 const useForm = (initialValues, validate) => {
   const [values, updateValues] = useState(initialValues);
@@ -9,7 +8,6 @@ const useForm = (initialValues, validate) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     updateValues((prevValues) => ({ ...prevValues, [name]: value }));  
-    console.log(touched)
     if (touched[name] || touched['all']) {  
       validateField(name, value);
     }

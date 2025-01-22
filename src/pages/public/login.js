@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Login } from '../../utills/redux/action';
-import { useDispatch } from 'react-redux';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { getUserInfo, ManageError, ToastMessage } from '../../utills/common';
+import { useDispatch } from 'react-redux'; 
+import {   isBlankSpace, ManageError, ToastMessage } from '../../utills/common';
 import { postApi } from '../../utills/api';
-import { USER_API } from '../../utills/constant';
-import ButtonSpinner from '../../components/common/Spinner';
+import { USER_API } from '../../utills/constant'; 
 import Button from '../../components/common/Button';
 import InputBox from '../../components/common/InputBox';
 import AuthFormContainer from '../../components/common/AuthFormContainer';
+import useForm from '../../utills/hooks/formValidationHook';
 
 const LoginPage = ({ handleToggle, setEmail }) => {
   const navigateTo = useNavigate();
@@ -41,35 +39,45 @@ const LoginPage = ({ handleToggle, setEmail }) => {
       ManageError(error);
       setLoader(false);
     }
+  }; 
+  const initialValues = {
+    email: "",
+    password: "",
+  }
+  const validate = (formValues) => {
+    const errors = {};  
+    if (!formValues.email) {
+      errors.email = "Email is required.";
+    } else if (!isBlankSpace(formValues.email)) {
+      errors.email = "Email cannot be blank or contain only spaces.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
+      errors.email = "Invalid email address.";
+    }
+    if (!formValues.password) {
+      errors.password = "Password is required.";
+    } else if (!isBlankSpace(formValues.password)) {
+      errors.password = "Password cannot be blank or contain only spaces.";
+    } else if (`${formValues.password}`.length < 6) {
+      errors.password = "Password must be at least 6 characters.";
+    } else if (!/[a-zA-Z0-9]{6,30}/.test(formValues.password)) {
+      errors.password = "Password can contain first 6 letters and numbers.";
+    }
+    return errors;
   };
-  const formik = useFormik({
-    initialValues: {
-      email: '',
-      password: '',
-    },
-    validationSchema: Yup.object({
-      email: Yup.string()
-        .email('Invalid email address')
-        .required('Email is required'),
-      password: Yup.string()
-        .required('Password is required')
-        .min(6, 'Password must be at least 6 characters')
-        .matches(/[a-zA-Z0-9]{6,30}/, 'Password can only contain letters and numbers'),
-    }),
-    onSubmit: values => {
-      // dispatch(Login(values, Navigate));
-      userLogin(values);
-    },
-  });
+
+  const { values , errors,  handleChange, handleBlur, handleSubmit } = useForm(
+    initialValues,
+    validate
+  );
   useEffect(() => {
-    setEmail(formik.values.email);
-  }, [formik.values.email]);
+    setEmail(values.email);
+  }, [values.email]);
   return (
     <>
       <AuthFormContainer
         title='Sign into your account'>
 
-        <form onSubmit={formik.handleSubmit}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(() => userLogin(values)) }}>
           {[
             { title: 'Email', field: 'email', type: 'email' },
             {
@@ -84,12 +92,12 @@ const LoginPage = ({ handleToggle, setEmail }) => {
                 key={index}
                 type={type}
                 title={title}
-                value={formik.values[field]}
+                value={values[field]}
                 placeholder={`Enter ${`${title}`.toLowerCase()}`}
                 name={field}
-                handleChange={formik.handleChange}
-                handleBlur={formik.handleBlur}
-                error={{ show: formik.touched[field] && formik.errors[field], msg: formik.errors[field] }}
+                handleChange={handleChange}
+                handleBlur={handleBlur}
+                error={{ show: errors[field], msg: errors[field] }}
                 parentClass='auth-input-box'
                 errorClass='form-error-text'
                 labelClass='sr-only'

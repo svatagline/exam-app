@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Login } from '../../utills/redux/action';
-import { useDispatch } from 'react-redux';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import Select from 'react-select';
 import { postApi } from '../../utills/api';
 import { USER_API } from '../../utills/constant';
-import { ManageError, ToastMessage } from '../../utills/common';
-import ButtonSpinner from '../../components/common/Spinner';
+import { isBlankSpace, ManageError, ToastMessage } from '../../utills/common';
 import Button from '../../components/common/Button';
 import InputBox from '../../components/common/InputBox';
 import SelectBox from '../../components/common/SelectBox';
 import AuthFormContainer from '../../components/common/AuthFormContainer';
+import useForm from '../../utills/hooks/formValidationHook';
 
 const options = [
   { value: 'teacher', label: 'Teacher' },
@@ -24,7 +18,6 @@ const SignUpPage = ({ handleToggle }) => {
     value: 'student',
     label: 'Student',
   });
-  const navigateTo = useNavigate();
   const [loader, setLoader] = useState(false);
   const [pwdShow, setPwdShow] = useState({
     password: false,
@@ -54,47 +47,66 @@ const SignUpPage = ({ handleToggle }) => {
     });
   };
 
-  const formik = useFormik({
-    initialValues: {
-      email: '',
-      password: '',
-      c_password: '',
-      name: '',
-      role: 'student',
-    },
-    validationSchema: Yup.object({
-      name: Yup.string().required('Name is required'),
-      role: Yup.string().required('Role is required'),
-      email: Yup.string()
-        .email('Invalid email address')
-        .required('Email is required'),
-      email: Yup.string()
-        .email('Invalid email address')
-        .required('Email is required'),
-      password:
-        Yup.string()
-          .required('Password is required.')
-          .min(6, 'Password is too short - should be 6 chars minimum.')
-          .matches(/[a-zA-Z0-9]{6,30}/, 'Password can only contain letters and numbers'),
-      c_password: Yup.string()
-        .required('Confirm password is required.')
-        .oneOf([Yup.ref('password')], 'Passwords must match')
-
-    }),
-    onSubmit: values => {
-      // dispatch(Login(values, Navigate));
-      delete values.c_password;
-      userRegistration(values);
 
 
-    },
-  });
+  const onRegister = (values) => {
+    const allValues = { ...values };
+    delete allValues.c_password;
+    userRegistration(allValues);
+  }
+  const initialValues = {
+    email: '',
+    password: '',
+    c_password: '',
+    name: '',
+    role: 'student',
+  }
+  const validate = (formValues) => {
+    const errors = {};
+    if (!formValues.name) {
+      errors.name = "Name is required.";
+    } else if (!isBlankSpace(formValues.name)) {
+      errors.name = "Name cannot be blank or contain only spaces.";
+    }
+    if (!formValues.role) {
+      errors.role = "Role is required.";
+    } else if (!isBlankSpace(formValues.role)) {
+      errors.role = "Role cannot be blank or contain only spaces.";
+    }
+    if (!formValues.email) {
+      errors.email = "Email is required.";
+    } else if (!isBlankSpace(formValues.email)) {
+      errors.email = "Email cannot be blank or contain only spaces.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
+      errors.email = "Invalid email address.";
+    }
+    if (!formValues.password) {
+      errors.password = "Password is required.";
+    } else if (!isBlankSpace(formValues.password)) {
+      errors.password = "Password cannot be blank or contain only spaces.";
+    } else if (`${formValues.password}`.length < 6) {
+      errors.password = "Password must be at least 6 characters.";
+    } else if (!/[a-zA-Z0-9]{6,30}/.test(formValues.password)) {
+      errors.password = "Password can contain first 6 letters and numbers.";
+    }
+    if (!formValues.c_password) {
+      errors.c_password = "Confirm password is required.";
+    } else if (formValues.c_password !== values.password) {
+      console.log(formValues.c_password, values.password)
+      errors.c_password = "Confirm password should be match with password.";
+    }
+    return errors;
+  };
 
+  const { values, setFieldValue, errors, handleChange, handleBlur, handleSubmit } = useForm(
+    initialValues,
+    validate
+  );
   return (
     <>
       <AuthFormContainer
         title='Register your account'>
-        <form onSubmit={formik.handleSubmit}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(() => onRegister(values)) }}>
           {[
             { title: 'Name', field: 'name', type: 'text' },
             { title: 'Email', field: 'email', type: 'email' },
@@ -120,7 +132,7 @@ const SignUpPage = ({ handleToggle }) => {
                   options={[...options]}
                   handleChange={e => {
                     setSelectedOption(e);
-                    formik.setFieldValue(field, e.value);
+                    setFieldValue(field, e.value);
                   }}
 
                 />
@@ -130,12 +142,12 @@ const SignUpPage = ({ handleToggle }) => {
                   key={index}
                   type={type}
                   title={title}
-                  value={formik.values[field]}
+                  value={values[field]}
                   placeholder={`Enter ${`${title}`.toLowerCase()}`}
                   name={field}
-                  handleChange={formik.handleChange}
-                  handleBlur={formik.handleBlur}
-                  error={{ show: formik.touched[field] && formik.errors[field], msg: formik.errors[field] }}
+                  handleChange={handleChange}
+                  handleBlur={handleBlur}
+                  error={{ show: errors[field], msg: errors[field] }}
                   parentClass='auth-input-box'
                   labelClass='sr-only'
                   errorClass='form-error-text'

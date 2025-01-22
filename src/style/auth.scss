@@ -185,6 +185,9 @@
   font-size: small;
   left: 3px;
   color: red;
+  white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
 }
 .form-control{
