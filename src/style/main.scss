@@ -1,0 +1,71 @@
+@import './auth.scss';
+@import './common.scss'; 
+
+.dashboardPage {
+    .card {
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .card-body {
+        overflow-x: auto;
+    }
+
+    .card-body {
+        overflow-x: auto;
+    }
+
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 100%;
+        border: 1px solid #ddd;
+    }
+
+    th,
+    td {
+        text-align: left;
+        padding: 16px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+}
+
+.cursor-pointer{
+    cursor: pointer !important;
+}
+
+.navbar-item-list{
+    a {
+        text-decoration: none; 
+        color: rgb(167, 167, 167);
+        .active { 
+            color: white;
+            font-weight: bold;
+        }
+    }
+    a:hover { 
+        color: white;
+    }
+   
+
+}
+.text-underline{
+    text-decoration: underline;
+}
+.contentCenter{
+    height: 100vh;
+    width: 100vw;
+    display: flex
+;
+    justify-content: center;
+    align-items: center;
+
+    .img-fluid {
+        max-width: 50% !important; 
+    }
+}
+
+ 
