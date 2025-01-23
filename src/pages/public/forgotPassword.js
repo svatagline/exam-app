@@ -37,7 +37,7 @@ const ForgotPasswordPage = ({ handleToggle, email }) => {
         return errors;
     };
 
-    const { values, errors, handleChange, handleBlur, handleSubmit } = useForm(
+    const { values, errors, handleChange, handleBlur, handleSubmit, setFieldTouch } = useForm(
         initialValues,
         validate
     );
@@ -46,7 +46,7 @@ const ForgotPasswordPage = ({ handleToggle, email }) => {
             <AuthFormContainer
                 title='Forgot Password'>
 
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(() => userLogin(values)) }}>
+                <form onSubmit={(e) => { e.preventDefault(); setFieldTouch('all', true); handleSubmit(() => userLogin(values)) }}>
                     {[
                         { title: 'Email', field: 'email', type: 'email' },
                     ].map(({ title, field, type }, index) => {

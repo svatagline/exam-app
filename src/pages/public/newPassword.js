@@ -74,7 +74,7 @@ const NewPasswordPage = ({ handleToggle }) => {
         return errors;
     };
 
-    const { values, errors, handleChange, handleBlur, handleSubmit } = useForm(
+    const { values, errors, handleChange, handleBlur,setFieldTouch, handleSubmit } = useForm(
         initialValues,
         validate
     );
@@ -93,7 +93,7 @@ const NewPasswordPage = ({ handleToggle }) => {
         <>
             <AuthFormContainer
                 title='Set New Password'>
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(() => onNewPassword(values)) }}>
+                <form onSubmit={(e) => { e.preventDefault(); setFieldTouch('all', true); handleSubmit(() => onNewPassword(values)) }}>
                     {[
                         { title: 'Password', field: 'password',  type: pwdShow['password'] ? 'text' : 'password', },
                         { title: 'Confirm Password', field: 'c_password',  type: pwdShow['c_password'] ? 'text' : 'password', },

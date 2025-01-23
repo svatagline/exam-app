@@ -91,14 +91,13 @@ const SignUpPage = ({ handleToggle }) => {
     }
     if (!formValues.c_password) {
       errors.c_password = "Confirm password is required.";
-    } else if (formValues.c_password !== values.password) {
-      console.log(formValues.c_password, values.password)
+    } else if (formValues.c_password !== values.password) { 
       errors.c_password = "Confirm password should be match with password.";
     }
     return errors;
   };
 
-  const { values, setFieldValue, errors, handleChange, handleBlur, handleSubmit } = useForm(
+  const { values, setFieldValue, errors, handleChange,setFieldTouch, handleBlur, handleSubmit } = useForm(
     initialValues,
     validate
   );
@@ -106,7 +105,7 @@ const SignUpPage = ({ handleToggle }) => {
     <>
       <AuthFormContainer
         title='Register your account'>
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(() => onRegister(values)) }}>
+        <form onSubmit={(e) => { e.preventDefault(); setFieldTouch('all', true); handleSubmit(() => onRegister(values)) }}>
           {[
             { title: 'Name', field: 'name', type: 'text' },
             { title: 'Email', field: 'email', type: 'email' },

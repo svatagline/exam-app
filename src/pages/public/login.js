@@ -65,7 +65,7 @@ const LoginPage = ({ handleToggle, setEmail }) => {
     return errors;
   };
 
-  const { values , errors,  handleChange, handleBlur, handleSubmit } = useForm(
+  const { values , errors,setFieldTouch,  handleChange, handleBlur, handleSubmit } = useForm(
     initialValues,
     validate
   );
@@ -77,7 +77,7 @@ const LoginPage = ({ handleToggle, setEmail }) => {
       <AuthFormContainer
         title='Sign into your account'>
 
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(() => userLogin(values)) }}>
+        <form onSubmit={(e) => { e.preventDefault(); setFieldTouch('all', true); handleSubmit(() => userLogin(values)) }}>
           {[
             { title: 'Email', field: 'email', type: 'email' },
             {

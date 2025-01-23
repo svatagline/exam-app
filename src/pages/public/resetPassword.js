@@ -1,19 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom'; 
-import {   useSelector } from 'react-redux'; 
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { isBlankSpace, logOut, ManageError, ToastMessage } from '../../utills/common';
-import {  privetpostApi,  } from '../../utills/api';
-import { USER_API } from '../../utills/constant'; 
+import { privetpostApi, } from '../../utills/api';
+import { USER_API } from '../../utills/constant';
 import Button from '../../components/common/Button';
 import InputBox from '../../components/common/InputBox';
 import AuthFormContainer from '../../components/common/AuthFormContainer';
 import useForm from '../../utills/hooks/formValidationHook';
 
 const ResetPasswordPage = () => {
-    const getParams = useLocation()
     const navigateTo = useNavigate();
     const [loader, setLoader] = useState(false)
-    const [token, setToken] = useState('')
     const userData = useSelector(state => state.globalState.user);
     const [pwdShow, setPwdShow] = useState({
         password: false,
@@ -37,7 +35,10 @@ const ResetPasswordPage = () => {
             setLoader(false)
             if (response.statusCode == 200) {
                 ToastMessage(response.message, 's')
-                logOut()
+                setTimeout(() => {
+                    logOut()
+                }, 2000);
+
             } else {
                 ToastMessage(response.message)
 
@@ -47,7 +48,7 @@ const ResetPasswordPage = () => {
             ManageError(error)
         }
     }
-   
+
 
     const onReset = (values) => {
         const body = {
@@ -67,13 +68,13 @@ const ResetPasswordPage = () => {
         const errors = {};
 
         if (!formValues.password) {
-            errors.password = "Password is required.";
+            errors.password = "Current password is required.";
         } else if (!isBlankSpace(formValues.password)) {
-            errors.password = "Password cannot be blank or contain only spaces.";
+            errors.password = "Current password cannot be blank or contain only spaces.";
         } else if (`${formValues.password}`.length < 6) {
-            errors.password = "Password must be at least 6 characters.";
+            errors.password = "Current password must be at least 6 characters.";
         } else if (!/[a-zA-Z0-9]{6,30}/.test(formValues.password)) {
-            errors.password = "Password can contain first 6 letters and numbers.";
+            errors.password = "Current password can contain first 6 letters and numbers.";
         }
         if (!formValues.n_password) {
             errors.n_password = "New password is required.";
@@ -83,6 +84,8 @@ const ResetPasswordPage = () => {
             errors.n_password = "New password must be at least 6 characters.";
         } else if (!/[a-zA-Z0-9]{6,30}/.test(formValues.n_password)) {
             errors.n_password = "New password can contain first 6 letters and numbers.";
+        } else if (formValues.n_password == values.password) {
+            errors.n_password = "New password should not be match with current password.";
         }
         if (!formValues.c_password) {
             errors.c_password = "Confirm password is required.";
@@ -92,21 +95,11 @@ const ResetPasswordPage = () => {
         return errors;
     };
 
-    const { values,   errors, handleChange, handleBlur, handleSubmit } = useForm(
+    const { values, errors, handleChange, handleBlur, setFieldTouch, handleSubmit } = useForm(
         initialValues,
         validate
     );
-    useEffect(() => {
-        if (getParams && getParams?.search) {
-            const allParams = getParams.search.split("?")
-            allParams.forEach((param) => {
-                if (param.includes('token=')) {
-                    setToken(param.split('=')[1])
-                }
-            })
-        }
 
-    }, [getParams])
     return (
         <>
             <AuthFormContainer
@@ -114,12 +107,12 @@ const ResetPasswordPage = () => {
                 navigationElement={
                     <div onClick={() => navigateTo(-1)} className='go-back  cursor-pointer'><i className={`fa fa-arrow-left`}></i> Go back page </div>
                 }
-            >  
-                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(() => onReset(values)) }}>
+            >
+                <form onSubmit={(e) => { e.preventDefault(); setFieldTouch('all', true); handleSubmit(() => onReset(values)) }}>
                     {[
-                        { title: 'Current Password', field: 'password',  type: pwdShow['password'] ? 'text' : 'password', },
-                        { title: 'New Password', field: 'n_password',  type: pwdShow['n_password'] ? 'text' : 'password', },
-                        { title: 'Confirm Password', field: 'c_password',  type: pwdShow['c_password'] ? 'text' : 'password', },
+                        { title: 'Current Password', field: 'password', type: pwdShow['password'] ? 'text' : 'password', },
+                        { title: 'New Password', field: 'n_password', type: pwdShow['n_password'] ? 'text' : 'password', },
+                        { title: 'Confirm Password', field: 'c_password', type: pwdShow['c_password'] ? 'text' : 'password', },
                     ].map(({ title, field, type }, index) => {
                         return (
                             <InputBox
@@ -131,7 +124,7 @@ const ResetPasswordPage = () => {
                                 name={field}
                                 handleChange={handleChange}
                                 handleBlur={handleBlur}
-                                error={{ show:  errors[field], msg: errors[field] }}
+                                error={{ show: errors[field], msg: errors[field] }}
                                 parentClass='auth-input-box'
                                 labelClass='sr-only'
                                 errorClass='form-error-text'
