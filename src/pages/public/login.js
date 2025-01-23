@@ -77,7 +77,7 @@ const LoginPage = ({ handleToggle, setEmail }) => {
       <AuthFormContainer
         title='Sign into your account'>
 
-        <form onSubmit={(e) => { e.preventDefault(); setFieldTouch('all', true); handleSubmit(() => userLogin(values)) }}>
+        <form onSubmit={(e) => { e.preventDefault(); setFieldTouch('all', true); handleSubmit(() => userLogin(values)) }}  >
           {[
             { title: 'Email', field: 'email', type: 'email' },
             {
